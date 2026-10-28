@@ -1,0 +1,25 @@
+{% from "_icons.html" import brandmark %}<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="csrf-token" content="{{ csrf_token() }}">
+<title>{% block title %}CyberAttend{% endblock %}</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body{% block bodyclass %}{% endblock %}>
+<div class="public">
+    <div class="box {% block boxclass %}{% endblock %}">
+        {% block brand %}{{ brandmark() }}{% endblock %}
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% for category, msg in messages %}
+                <div class="flash {{ 'error' if category=='error' else '' }}">{{ msg }}</div>
+            {% endfor %}
+        {% endwith %}
+        {% block content %}{% endblock %}
+    </div>
+</div>
+<script src="{{ url_for('static', filename='js/face.js') }}"></script>
+{% block scripts %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,44 @@
+{% extends "public_base.html" %}
+{% from "_icons.html" import icon %}
+{% block title %}Waiting for Approval - CyberAttend{% endblock %}
+{% block boxclass %}emp{% endblock %}
+{% block content %}
+<h1>Admin approval</h1>
+<p class="sub">Step 3 of 3 · Waiting for review</p>
+<div class="steps"><div class="s done">1 · Details</div><div class="s done">2 · Face</div><div class="s now">3 · Approval</div></div>
+
+<div class="waitbox" id="wait">
+    {% if emp.status == 'approved' %}
+    <div class="big-icon ok">{{ icon('check') }}</div>
+    <h2>Approved</h2>
+    <p class="muted">Your account has been approved by the admin.</p>
+    <a class="btn mt-2" href="{{ url_for('waiting_continue') }}">Log in now</a>
+    {% elif emp.status == 'rejected' %}
+    <div class="big-icon bad">{{ icon('x') }}</div>
+    <h2>Not approved</h2>
+    <p class="muted">The admin did not approve this account. Please contact your administrator.</p>
+    {% else %}
+    <div class="big-icon">{{ icon('clock') }}</div>
+    <h2>Approval pending</h2>
+    <p class="muted">Hello <b>{{ emp.full_name }}</b>, your face has been registered.<br>
+    Please wait until the admin approves your account. This page updates automatically.</p>
+    <div class="spinner"></div>
+    <p class="scan-note">Department: {{ emp.department_name }}</p>
+    {% endif %}
+</div>
+<div class="links"><a href="{{ url_for('logout') }}">Log out</a></div>
+{% endblock %}
+
+{% block scripts %}
+{% if emp.status == 'pending' %}
+<script>
+setInterval(async () => {
+    try {
+        const r = await fetch('/api/status', { credentials: 'same-origin' });
+        const d = await r.json();
+        if (d.status && d.status !== 'pending') location.reload();
+    } catch (e) {}
+}, 5000);
+</script>
+{% endif %}
+{% endblock %}

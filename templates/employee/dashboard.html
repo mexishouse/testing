@@ -1,0 +1,100 @@
+{% extends "employee/base.html" %}
+{% block title %}Dashboard{% endblock %}
+{% block heading %}My Dashboard{% endblock %}
+
+{% block content %}
+<div class="grid grid-main mb-2">
+    <div class="card">
+        <h2>Today — {{ server_now[:10] }}</h2>
+        {% if not today %}
+            <div class="row"><span class="badge gray">Not checked in</span><span class="muted">Shift starts {{ settings.shift_start }} · {{ (req/3600)|round(1) }}h required</span></div>
+            <div class="clock mt-2">00:00:00</div>
+            <p class="muted">Check in with your face to start your working hours.</p>
+            <a class="btn big mt-1" href="{{ url_for('scan', action='checkin') }}">Check in with face</a>
+        {% else %}
+            <div class="row">
+                {% if today.status == 'Working' %}<span class="badge live">● Working</span>
+                {% else %}<span class="badge {{ today.status_class }}">{{ today.status }}</span>{% endif %}
+                {% if today.is_late %}<span class="badge warn">Late</span>{% endif %}
+                <span class="muted">In: {{ today.check_in_time }}{% if today.check_out %} · Out: {{ today.check_out_time }}{% endif %}</span>
+            </div>
+            <div class="clock mt-2 {% if today.check_out %}done{% endif %}" id="clock">{{ today.worked|hm }}</div>
+            <div class="meter"><div id="meter"></div></div>
+            <p class="muted" id="remain"></p>
+            {% if not today.check_out %}
+                <a class="btn big dark mt-1" href="{{ url_for('scan', action='checkout') }}">Check out with face</a>
+            {% elif today.status == 'Completed' %}
+                <div class="warnbox info">Required working hours completed. See you tomorrow!</div>
+            {% else %}
+                <div class="warnbox">You left {{ today.short_by|hm }} before completing the required hours.</div>
+            {% endif %}
+        {% endif %}
+    </div>
+
+    <div class="card">
+        <h2>My department</h2>
+        <div class="kv">
+            <div class="k">Department</div><div><span class="badge">{{ me.department_name }}</span></div>
+            <div class="k">Designation</div><div>{{ me.designation or '—' }}</div>
+            <div class="k">Employee ID</div><div>#{{ '%03d'|format(me.id) }}</div>
+            <div class="k">Joined</div><div>{{ me.approved_at|dt }}</div>
+        </div>
+        <a class="btn secondary small mt-2" href="{{ url_for('my_department') }}">Open department →</a>
+    </div>
+</div>
+
+<div class="grid grid-4 mb-2">
+    <div class="card stat-card"><div class="label">Days Present ({{ summary.month }})</div><div class="value">{{ summary.days_present }}</div></div>
+    <div class="card stat-card"><div class="label">Hours Worked</div><div class="value accent" style="font-size:26px">{{ summary.total_seconds|hm }}</div></div>
+    <div class="card stat-card"><div class="label">Avg / Day</div><div class="value" style="font-size:26px">{{ summary.avg_seconds|hm }}</div></div>
+    <div class="card stat-card"><div class="label">Late · Short days</div><div class="value danger" style="font-size:26px">{{ summary.late_days }} · {{ summary.short_days }}</div></div>
+</div>
+
+<div class="grid grid-main">
+    <div class="card">
+        <h2>Recent attendance</h2>
+        <div class="table-wrap"><table>
+            <thead><tr><th>Date</th><th>In</th><th>Out</th><th>Worked</th><th>Status</th></tr></thead>
+            <tbody>
+            {% for r in history %}
+                <tr><td>{{ r.work_date }}</td><td>{{ r.check_in_time }}</td><td>{{ r.check_out_time }}</td>
+                    <td>{{ r.worked|hm if r.status != 'No Check-out' else '—' }}</td>
+                    <td><span class="badge {{ r.status_class }}">{{ r.status }}</span>{% if r.is_late %} <span class="badge warn">Late</span>{% endif %}</td></tr>
+            {% else %}
+                <tr><td colspan="5" class="muted">No attendance yet.</td></tr>
+            {% endfor %}
+            </tbody>
+        </table></div>
+        <a class="btn secondary small mt-2" href="{{ url_for('my_attendance') }}">Full history →</a>
+    </div>
+    <div class="card">
+        <h2>Notices</h2>
+        {% for a in announcements %}
+        <div class="notice"><h4>{{ a.title }}</h4><p>{{ a.body }}</p>
+            <small>{{ a.created_at|dt }} · {{ a.department_name or 'Everyone' }}</small></div>
+        {% else %}<p class="muted">No notices.</p>{% endfor %}
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{% if today %}
+<script>
+(function () {
+    const REQ = {{ req }}, base = {{ today.worked }}, running = {{ 'true' if today.status == 'Working' else 'false' }};
+    const t0 = Date.now();
+    const clock = document.getElementById('clock'), meter = document.getElementById('meter'), remain = document.getElementById('remain');
+    const p = n => String(n).padStart(2, '0');
+    function tick() {
+        const w = base + (running ? Math.floor((Date.now() - t0) / 1000) : 0);
+        if (running) clock.textContent = p(Math.floor(w / 3600)) + ':' + p(Math.floor(w % 3600 / 60)) + ':' + p(w % 60);
+        meter.style.width = Math.min(100, w / REQ * 100) + '%';
+        const left = REQ - w;
+        remain.textContent = left > 0 ? 'Remaining: ' + Math.floor(left / 3600) + 'h ' + p(Math.floor(left % 3600 / 60)) + 'm of ' + (REQ / 3600) + 'h required'
+                                     : 'Required hours complete' + (left < 0 ? ' (+' + Math.floor(-left / 3600) + 'h ' + p(Math.floor(-left % 3600 / 60)) + 'm overtime)' : '');
+    }
+    tick(); if (running) setInterval(tick, 1000);
+})();
+</script>
+{% endif %}
+{% endblock %}

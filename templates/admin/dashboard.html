@@ -1,0 +1,68 @@
+{% extends "admin/base.html" %}
+{% block title %}Dashboard{% endblock %}
+{% block heading %}Overview{% endblock %}
+
+{% block content %}
+{% if pending %}
+<div class="card mb-2 accent-pending">
+    <h2>Pending approvals ({{ pending|length }})</h2>
+    <div class="table-wrap"><table>
+        <thead><tr><th>Name</th><th>Department</th><th>Registered</th><th>Face</th><th></th></tr></thead>
+        <tbody>
+        {% for e in pending[:5] %}
+        <tr><td>{{ e.full_name }}{% if e.flag_note %} <span class="badge warn" title="{{ e.flag_note }}">Check</span>{% endif %}</td>
+            <td><span class="badge gray">{{ e.department_name }}</span></td><td>{{ e.created_at|dt }}</td>
+            <td><div class="thumbs"><img src="{{ url_for('admin_sample', emp_id=e.id, n=1) }}" alt=""></div></td>
+            <td class="right">{% include "admin/_employee_row_actions.html" %}</td></tr>
+        {% endfor %}
+        </tbody>
+    </table></div>
+    {% if pending|length > 5 %}<a class="btn secondary small mt-2" href="{{ url_for('admin_approvals') }}">View all {{ pending|length }} →</a>{% endif %}
+</div>
+{% endif %}
+
+<div class="grid grid-5 mb-2">
+    <div class="card stat-card"><div class="label">Employees</div><div class="value">{{ stats.approved }}</div></div>
+    <div class="card stat-card"><div class="label">Present Today</div><div class="value accent">{{ stats.present }}</div></div>
+    <div class="card stat-card"><div class="label">Working Now</div><div class="value">{{ stats.working }}</div></div>
+    <div class="card stat-card"><div class="label">Left / Done</div><div class="value accent">{{ stats.left }}</div></div>
+    <div class="card stat-card"><div class="label">Absent · Late</div><div class="value danger">{{ stats.absent }} · {{ stats.late }}</div></div>
+</div>
+
+<div class="grid grid-main mb-2">
+    <div class="card">
+        <h2>Today's attendance &amp; working hours</h2>
+        <div class="table-wrap"><table>
+            <thead><tr><th>Employee</th><th>Dept</th><th>In</th><th>Out</th><th>Worked</th><th>Status</th></tr></thead>
+            <tbody>
+            {% for r in today_rows %}
+                <tr><td><a href="{{ url_for('admin_employee_detail', emp_id=r.employee_id) }}">{{ r.full_name }}</a></td>
+                    <td><span class="badge gray">{{ r.department_name }}</span></td>
+                    <td>{{ r.check_in_time }}{% if r.is_late %} <span class="badge warn">Late</span>{% endif %}</td>
+                    <td>{{ r.check_out_time }}</td><td>{{ r.worked|hm }}</td>
+                    <td><span class="badge {{ r.status_class }}">{{ r.status }}</span></td></tr>
+            {% else %}<tr><td colspan="6" class="muted">No check-ins yet today.</td></tr>{% endfor %}
+            </tbody>
+        </table></div>
+        <p class="scan-note" style="text-align:left">Required: {{ (req/3600)|round(1) }}h per day · shift starts {{ settings.shift_start }} · auto-refresh every 30s</p>
+    </div>
+    <div class="card">
+        <h2>Department-wise (today)</h2>
+        {% for d in depts if d.approved_count %}
+        <div class="bar-row"><div>{{ d.name }}</div>
+            <div class="track"><div style="width: {{ (d.present_today / d.approved_count * 100)|round }}%"></div></div>
+            <div>{{ d.present_today }}/{{ d.approved_count }}</div></div>
+        {% else %}<p class="muted">No approved employees yet.</p>{% endfor %}
+    </div>
+</div>
+
+<div class="card">
+    <h2>Absent today ({{ absent|length }})</h2>
+    {% for a in absent %}<span class="badge gray" style="margin:0 6px 6px 0">{{ a.full_name }} · {{ a.department_name }}</span>
+    {% else %}<span class="muted">Everyone has checked in.</span>{% endfor %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>setTimeout(() => location.reload(), 30000);</script>
+{% endblock %}

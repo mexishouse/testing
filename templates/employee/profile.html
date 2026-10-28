@@ -1,0 +1,39 @@
+{% extends "employee/base.html" %}
+{% block title %}My Profile{% endblock %}
+{% block heading %}My Profile{% endblock %}
+{% block content %}
+<div class="profile-layout">
+  <section class="card">
+    <div class="profile-header">
+      {% if me.profile_picture %}<img class="profile-avatar large" src="{{ url_for('profile_picture', emp_id=me.id) }}" alt="Profile picture">
+      {% else %}<div class="profile-avatar large placeholder">{{ me.full_name[:1]|upper }}</div>{% endif %}
+      <div><h2>{{ me.full_name }}</h2><p class="muted">{{ me.designation or 'Team member' }} · {{ me.department_name }}</p><span class="badge">Employee ID: {{ me.id }}</span></div>
+    </div>
+    <h2>Professional profile</h2><p class="muted">Your profile is visible to approved employees and authorized admins. Never add passwords or private account credentials to public profile fields.</p>
+    <form method="POST" enctype="multipart/form-data">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="action" value="profile">
+      <div class="field"><label>Profile picture (JPG, PNG, WEBP)</label><input type="file" name="profile_picture" accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp"></div>
+      <div class="form-grid">
+        <div class="field"><label>Full name</label><input value="{{ me.full_name }}" disabled></div>
+        <div class="field"><label>Username</label><input value="{{ me.username }}" disabled></div>
+        <div class="field"><label>Email</label><input type="email" name="email" value="{{ me.email or '' }}" maxlength="254" placeholder="name@company.com"></div>
+        <div class="field"><label>Phone number</label><input type="tel" name="phone" value="{{ me.phone or '' }}" maxlength="40" placeholder="+92 ..."></div>
+        <div class="field"><label>Job title / designation</label><input name="designation" value="{{ me.designation or '' }}" maxlength="100" placeholder="e.g. Software Engineer"></div>
+        <div class="field"><label>LinkedIn URL</label><input type="url" name="social_linkedin" value="{{ me.social_linkedin or '' }}" placeholder="https://linkedin.com/in/..."></div>
+        <div class="field"><label>Facebook URL</label><input type="url" name="social_facebook" value="{{ me.social_facebook or '' }}" placeholder="https://facebook.com/..."></div>
+        <div class="field"><label>Instagram URL</label><input type="url" name="social_instagram" value="{{ me.social_instagram or '' }}" placeholder="https://instagram.com/..."></div>
+        <div class="field"><label>X / Twitter URL</label><input type="url" name="social_x" value="{{ me.social_x or '' }}" placeholder="https://x.com/..."></div>
+        <div class="field"><label>Portfolio / website</label><input type="url" name="social_website" value="{{ me.social_website or '' }}" placeholder="https://your-portfolio.com"></div>
+      </div><button class="btn" type="submit">Save profile</button>
+    </form>
+  </section>
+  <section class="card"><h2>Account security</h2><p class="muted">Change your login password here. Passwords are never shown in profiles or Excel exports.</p>
+    <form method="POST"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="action" value="password">
+      <div class="field"><label>Current password</label><input type="password" name="current" autocomplete="current-password" required></div>
+      <div class="field"><label>New password</label><input type="password" name="new" autocomplete="new-password" required minlength="8"></div>
+      <div class="field"><label>Confirm new password</label><input type="password" name="confirm" autocomplete="new-password" required minlength="8"></div>
+      <button class="btn secondary" type="submit">Update password</button>
+    </form><hr><div class="kv"><div class="k">Registered</div><div>{{ me.created_at|dt }}</div><div class="k">Approved</div><div>{{ me.approved_at|dt }}</div><div class="k">Face samples</div><div>{{ me.samples_captured }}</div></div>
+  </section>
+</div>
+{% endblock %}

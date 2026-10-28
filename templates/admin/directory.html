@@ -1,0 +1,8 @@
+{% extends "admin/base.html" %}
+{% block title %}People Directory{% endblock %}{% block heading %}Employee Directory{% endblock %}
+{% block content %}
+<div class="card mb-2"><form method="GET" class="search-form"><input name="q" value="{{ q }}" placeholder="Search name, department or job title"><button class="btn" type="submit">Search</button></form><p class="muted">Approved employee profiles and contact links.</p></div>
+<div class="people-grid">{% for p in people %}<a class="person-card" href="{{ url_for('admin_employee_detail', emp_id=p.id) }}">
+{% if p.profile_picture %}<img class="profile-avatar" src="{{ url_for('profile_picture', emp_id=p.id) }}" alt="">{% else %}<div class="profile-avatar placeholder">{{ p.full_name[:1]|upper }}</div>{% endif %}
+<div><strong>{{ p.full_name }}</strong><p>{{ p.designation or 'Team member' }}</p><span class="badge gray">{{ p.department_name }}</span><p>{{ p.email or '' }} · {{ p.phone or '' }}</p></div></a>{% else %}<div class="card muted">No matching profiles.</div>{% endfor %}</div>
+{% endblock %}

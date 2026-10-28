@@ -1,0 +1,29 @@
+{% extends "public_base.html" %}
+{% block title %}Register - CyberAttend{% endblock %}
+{% block boxclass %}emp{% endblock %}
+{% block content %}
+<h1>Create your account</h1>
+<p class="sub">Step 1 of 3 · Your details</p>
+<div class="steps"><div class="s now">1 · Details</div><div class="s">2 · Face</div><div class="s">3 · Approval</div></div>
+<form method="POST" autocomplete="off">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <div class="field"><label>Full Name</label><input type="text" name="full_name" value="{{ form.get('full_name','') }}" required placeholder="e.g. Ali Raza"></div>
+    <div class="field">
+        <label>Department</label>
+        <select name="department_id" required>
+            <option value="" disabled {% if not form.get('department_id') %}selected{% endif %}>Select your department</option>
+            {% for d in departments %}
+            <option value="{{ d.id }}" {% if form.get('department_id') == d.id|string %}selected{% endif %}>{{ d.name }}</option>
+            {% endfor %}
+        </select>
+        <div class="hint">You will only be able to see information of this department.</div>
+    </div>
+    <div class="field"><label>Designation (optional)</label><input type="text" name="designation" value="{{ form.get('designation','') }}" placeholder="e.g. Python Developer"></div>
+    <div class="field"><label>Email (optional)</label><input type="email" name="email" value="{{ form.get('email','') }}"></div>
+    <div class="field"><label>Username</label><input type="text" name="username" value="{{ form.get('username','') }}" required minlength="3"></div>
+    <div class="field"><label>Password</label><input type="password" name="password" required minlength="6"></div>
+    <div class="field"><label>Confirm Password</label><input type="password" name="confirm" required minlength="6"></div>
+    <button class="btn" type="submit">Next: register face</button>
+</form>
+<div class="links">Already registered? <a href="{{ url_for('login') }}">Login</a></div>
+{% endblock %}

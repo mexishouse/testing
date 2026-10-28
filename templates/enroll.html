@@ -1,0 +1,70 @@
+{% extends "public_base.html" %}
+{% block title %}Register Face - CyberAttend{% endblock %}
+{% block boxclass %}wide emp{% endblock %}
+{% block content %}
+<h1>Face registration</h1>
+<p class="sub">Step 2 of 3 · {{ emp.full_name }} · {{ emp.department_name }}</p>
+<div class="steps"><div class="s done">1 · Details</div><div class="s now">2 · Face</div><div class="s">3 · Approval</div></div>
+
+<div class="cam" id="cam">
+    <video id="video" playsinline muted></video>
+    <canvas id="overlay"></canvas>
+    <div class="placeholder" id="ph">Click “Start Camera” and allow camera access.</div>
+    <div class="msg" id="msg">Ready.</div>
+</div>
+<canvas id="work" style="display:none"></canvas>
+<div class="meter mt-2"><div id="bar"></div></div>
+<p class="scan-note" id="count">0 / {{ needed }} samples</p>
+<button class="btn mt-1" id="startBtn" type="button">Start camera</button>
+<p class="scan-note">Look straight at the camera in good light. Slowly turn your head a little left, right, up and down.
+Only <b>one</b> face should be visible. Your samples are saved into the dataset zip automatically.</p>
+<div class="links"><a href="{{ url_for('logout') }}">Cancel</a></div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const NEEDED = {{ needed }};
+const video = document.getElementById('video'), overlay = document.getElementById('overlay'),
+      work = document.getElementById('work'), msg = document.getElementById('msg'),
+      bar = document.getElementById('bar'), cnt = document.getElementById('count'),
+      cam = document.getElementById('cam'), ph = document.getElementById('ph'),
+      btn = document.getElementById('startBtn');
+const hints = {
+    no_face: "No face detected — move closer / improve lighting.",
+    multiple_faces: "Only ONE person should be in front of the camera.",
+    captured: "Capturing… keep looking at the camera and move your head slowly."
+};
+let running = false;
+
+btn.onclick = async () => {
+    btn.disabled = true;
+    try {
+        await CameraKit.start(video);
+        ph.style.display = 'none'; btn.style.display = 'none';
+        running = true; loop();
+    } catch (e) { ph.textContent = e.message; btn.disabled = false; }
+};
+
+async function loop() {
+    while (running) {
+        if (video.readyState >= 2 && video.videoWidth) {
+            const res = await CameraKit.post('/api/enroll/frame', { image: CameraKit.frame(video, work) });
+            if (res._status === 403) { location.href = '/login'; return; }
+            if (!res.ok) { msg.textContent = res.error || 'Error'; await CameraKit.sleep(1000); continue; }
+            cnt.textContent = res.count + ' / ' + NEEDED + ' samples';
+            bar.style.width = Math.min(100, res.count / NEEDED * 100) + '%';
+            CameraKit.box(overlay, video, res, '#4f46e5');
+            cam.className = 'cam ' + (res.state === 'captured' ? 'ok' : 'bad');
+            msg.textContent = hints[res.state] || '';
+            if (res.done) {
+                running = false; CameraKit.stop(video);
+                msg.textContent = 'Face registered! Sending for admin approval…';
+                setTimeout(() => location.href = res.redirect, 900);
+                return;
+            }
+        }
+        await CameraKit.sleep(280);
+    }
+}
+</script>
+{% endblock %}

@@ -1,0 +1,18 @@
+{# expects: e (employee dict).  Removing people (revoke / delete) is reserved for the main admin. #}
+{% if e.status in ('pending', 'rejected') %}
+<form class="inline" method="POST" action="{{ url_for('admin_approve', emp_id=e.id) }}">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <button class="btn small" type="submit">Approve</button></form>
+{% endif %}
+{% if e.status == 'pending' or (e.status == 'approved' and is_main) %}
+<form class="inline" method="POST" action="{{ url_for('admin_reject', emp_id=e.id) }}"
+      onsubmit="return confirm('{{ 'Reject' if e.status == 'pending' else 'Revoke access of' }} {{ e.full_name }}?');">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <button class="btn danger small" type="submit">{{ 'Reject' if e.status == 'pending' else 'Revoke' }}</button></form>
+{% endif %}
+{% if is_main %}
+<form class="inline" method="POST" action="{{ url_for('admin_delete_employee', emp_id=e.id) }}"
+      onsubmit="return confirm('Delete {{ e.full_name }} with all attendance and face data? This cannot be undone.');">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <button class="btn danger small" type="submit">Delete</button></form>
+{% endif %}

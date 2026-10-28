@@ -1,0 +1,45 @@
+{% extends "admin/base.html" %}
+{% block title %}Attendance{% endblock %}
+{% block heading %}Attendance &amp; Working Hours{% endblock %}
+
+{% block content %}
+<div class="card mb-2">
+    <form method="GET" class="filters" style="margin-bottom:0">
+        <div class="field"><label>From</label><input type="date" name="from" value="{{ a.date_from }}"></div>
+        <div class="field"><label>To</label><input type="date" name="to" value="{{ a.date_to }}"></div>
+        <div class="field"><label>Department</label>
+            <select name="department_id"><option value="">All</option>
+            {% for d in departments %}<option value="{{ d.id }}" {% if a.department_id == d.id %}selected{% endif %}>{{ d.name }}</option>{% endfor %}</select></div>
+        <div class="field"><label>Employee</label>
+            <select name="employee_id"><option value="">All</option>
+            {% for e in employees %}<option value="{{ e.id }}" {% if a.employee_id == e.id %}selected{% endif %}>{{ e.full_name }}</option>{% endfor %}</select></div>
+        <div class="field"><label>Status</label>
+            <select name="status"><option value="">All</option>
+            {% for s in ['Working','Completed','Short Hours','No Check-out'] %}<option {% if a.status == s %}selected{% endif %}>{{ s }}</option>{% endfor %}</select></div>
+        <button class="btn small" type="submit">Filter</button>
+        <a class="btn secondary small" href="{{ url_for('admin_attendance') }}">Today</a>
+        <a class="btn secondary small" href="{{ url_for('admin_attendance_csv') }}?{{ qs }}">Export CSV</a>
+        <a class="btn secondary small" href="{{ url_for('admin_attendance_xlsx') }}?{{ qs }}">Export Excel</a>
+    </form>
+</div>
+<div class="card">
+    <h2>Records ({{ rows|length }}) · Total worked {{ total_worked|hm }} · Required/day {{ req|hm }}</h2>
+    <div class="table-wrap"><table>
+        <thead><tr><th>Date</th><th>Employee</th><th>Department</th><th>Check In</th><th>Check Out</th><th>Worked</th><th>Difference</th><th>Location</th><th>GPS</th><th>Status</th></tr></thead>
+        <tbody>
+        {% for r in rows %}
+            <tr><td>{{ r.work_date }}</td>
+                <td><a href="{{ url_for('admin_employee_detail', emp_id=r.employee_id) }}">{{ r.full_name }}</a></td>
+                <td><span class="badge gray">{{ r.department_name }}</span></td>
+                <td>{{ r.check_in_time }}{% if r.is_late %} <span class="badge warn">Late</span>{% endif %}</td>
+                <td>{{ r.check_out_time }}</td>
+                <td>{{ r.worked|hm if r.status != 'No Check-out' else '—' }}</td>
+                <td>{% if r.short_by %}<span style="color:var(--warning)">−{{ r.short_by|hm }}</span>{% elif r.overtime %}<span style="color:var(--primary)">+{{ r.overtime|hm }}</span>{% else %}—{% endif %}</td>
+                <td>{{ r.location_name or r.work_mode or "—" }}</td>
+                <td>{% if r.latitude is not none and r.longitude is not none %}<a target="_blank" rel="noopener" href="https://www.google.com/maps?q={{ r.latitude }},{{ r.longitude }}">View map</a><small>{{ "%.5f"|format(r.latitude) }}, {{ "%.5f"|format(r.longitude) }}</small>{% else %}—{% endif %}</td>
+                <td><span class="badge {{ r.status_class }}">{{ r.status }}</span></td></tr>
+        {% else %}<tr><td colspan="10" class="muted">No records found.</td></tr>{% endfor %}
+        </tbody>
+    </table></div>
+</div>
+{% endblock %}

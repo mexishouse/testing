@@ -1,0 +1,31 @@
+{% extends "admin/base.html" %}
+{% block title %}Settings{% endblock %}
+{% block heading %}Settings{% endblock %}
+
+{% block content %}
+<div class="grid grid-eq">
+    <div class="card">
+        <h2>Working hours</h2>
+        <form method="POST">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <div class="field"><label>Required working hours per day</label>
+                <input type="number" name="required_hours" step="0.25" min="0.5" max="16" value="{{ s.required_hours }}" required></div>
+            <div class="field"><label>Shift start time</label><input type="time" name="shift_start" value="{{ s.shift_start }}" required></div>
+            <div class="field"><label>Late grace (minutes)</label><input type="number" name="late_grace_minutes" min="0" max="240" value="{{ s.late_grace_minutes }}" required>
+                <div class="hint">Check-in after shift start + grace is marked “Late”.</div></div>
+            <button class="btn" type="submit">Save changes</button>
+        </form>
+    </div>
+    <div class="card">
+        <h2>Change admin password</h2>
+        <form method="POST">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <input type="hidden" name="section" value="password">
+            <div class="field"><label>Current password</label><input type="password" name="current" required></div>
+            <div class="field"><label>New password (min 8)</label><input type="password" name="new" required minlength="8"></div>
+            <div class="field"><label>Confirm new password</label><input type="password" name="confirm" required minlength="8"></div>
+            <button class="btn" type="submit">Update password</button>
+        </form>
+    </div>
+</div>
+{% endblock %}

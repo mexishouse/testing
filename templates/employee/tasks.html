@@ -1,0 +1,17 @@
+{% extends "employee/base.html" %}
+{% block title %}My Work{% endblock %}{% block heading %}My Work & Tasks{% endblock %}
+{% block content %}
+<div class="grid grid-main mb-2">
+<section class="card"><h2>Propose work to admin</h2><p class="muted">Tell admin what you plan to work on. It will appear as a proposal until reviewed.</p>
+<form method="POST"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+<div class="field"><label>Task / work title</label><input name="title" required maxlength="180" placeholder="e.g. Improve mobile dashboard"></div>
+<div class="field"><label>Details / expected outcome</label><textarea name="description" rows="4" maxlength="4000" placeholder="Describe the work and expected result"></textarea></div>
+<div class="field"><label>Target date (optional)</label><input type="date" name="due_date"></div><button class="btn" type="submit">Send proposal</button></form></section>
+<section class="card"><h2>Work status guide</h2><div class="kv"><div class="k">Proposed</div><div>Waiting for admin review</div><div class="k">Assigned</div><div>Ready to start</div><div class="k">In Progress</div><div>Currently working</div><div class="k">Completed</div><div>Submitted as finished</div></div></section>
+</div>
+<div class="card"><h2>My tasks ({{ tasks|length }})</h2><div class="task-list">
+{% for t in tasks %}<article class="task-card"><div class="task-top"><div><h3>{{ t.title }}</h3><p class="muted">{{ t.description or 'No additional details' }}</p></div><span class="badge {{ 'warn' if t.status=='Proposed' else ('success' if t.status=='Completed' else 'gray') }}">{{ t.status }}</span></div>
+<div class="task-meta"><span>Assigned / reviewed by: {{ t.assigned_by or '—' }}</span><span>Due: {{ t.due_date or 'Not set' }}</span><span>Updated: {{ t.updated_at|dt }}</span></div>
+{% if t.status in ('Assigned','In Progress') %}<form method="POST" action="{{ url_for('employee_task_update', task_id=t.id) }}" class="task-update"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><div class="field"><label>Status</label><select name="status"><option {{ 'selected' if t.status=='Assigned' else '' }}>Assigned</option><option {{ 'selected' if t.status=='In Progress' else '' }}>In Progress</option><option>Completed</option></select></div><div class="field"><label>Progress note</label><input name="employee_note" value="{{ t.employee_note or '' }}" maxlength="2000" placeholder="What have you completed?"></div><button class="btn small" type="submit">Update</button></form>{% elif t.employee_note %}<p><strong>Employee update:</strong> {{ t.employee_note }}</p>{% endif %}</article>
+{% else %}<p class="muted">No tasks yet. You can propose your work using the form above.</p>{% endfor %}</div></div>
+{% endblock %}

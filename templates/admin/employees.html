@@ -1,0 +1,35 @@
+{% extends "admin/base.html" %}
+{% block title %}Employees{% endblock %}
+{% block heading %}All Employees{% endblock %}
+
+{% block content %}
+<div class="card mb-2">
+    <form method="GET" class="filters" style="margin-bottom:0">
+        <div class="field"><label>Search</label><input type="text" name="q" value="{{ f_q }}" placeholder="name or username"></div>
+        <div class="field"><label>Department</label>
+            <select name="department_id"><option value="">All</option>
+            {% for d in departments %}<option value="{{ d.id }}" {% if f_dept == d.id %}selected{% endif %}>{{ d.name }}</option>{% endfor %}</select></div>
+        <div class="field"><label>Status</label>
+            <select name="status"><option value="">All</option>
+            {% for v, l in [('approved','Approved'),('pending','Pending approval'),('face_pending','Face not registered'),('rejected','Rejected')] %}
+            <option value="{{ v }}" {% if f_status == v %}selected{% endif %}>{{ l }}</option>{% endfor %}</select></div>
+        <button class="btn small" type="submit">Filter</button>
+        <a class="btn secondary small" href="{{ url_for('admin_employees') }}">Reset</a>
+    </form>
+</div>
+<div class="card">
+    <h2>Employees ({{ employees|length }})</h2>
+    <div class="table-wrap"><table>
+        <thead><tr><th>ID</th><th>Name</th><th>Department</th><th>Samples</th><th>Status</th><th>Registered</th><th></th></tr></thead>
+        <tbody>
+        {% for e in employees %}
+            <tr><td>#{{ '%03d'|format(e.id) }}</td>
+                <td><a href="{{ url_for('admin_employee_detail', emp_id=e.id) }}">{{ e.full_name }}</a><br><span class="muted" style="font-size:11px">@{{ e.username }}</span></td>
+                <td><span class="badge gray">{{ e.department_name }}</span></td><td>{{ e.samples_captured }}</td>
+                <td>{% include "admin/_status_badge.html" %}</td><td>{{ e.created_at|dt }}</td>
+                <td class="right">{% include "admin/_employee_row_actions.html" %}</td></tr>
+        {% else %}<tr><td colspan="7" class="muted">No employees found.</td></tr>{% endfor %}
+        </tbody>
+    </table></div>
+</div>
+{% endblock %}

@@ -1,0 +1,38 @@
+{% extends "admin/base.html" %}
+{% block title %}Approvals{% endblock %}
+{% block heading %}Employee Approvals{% endblock %}
+
+{% block content %}
+<div class="card mb-2">
+    <h2>Waiting for your approval ({{ pending|length }})</h2>
+    {% for e in pending %}
+    <div class="row" style="padding:14px 0; border-bottom:1px solid var(--border); align-items:flex-start">
+        <div style="min-width:240px; flex:1">
+            <div style="font-size:16px; color:var(--text);font-weight:600">{{ e.full_name }}</div>
+            <div class="muted" style="font-size:12px; line-height:1.8">
+                @{{ e.username }} · <span class="badge gray">{{ e.department_name }}</span><br>
+                {{ e.designation or 'No designation' }}{% if e.email %} · {{ e.email }}{% endif %}<br>
+                Registered {{ e.created_at|dt }} · {{ e.samples_captured }} face samples
+            </div>
+            {% if e.flag_note %}<div class="warnbox mt-1">{{ e.flag_note }}</div>{% endif %}
+        </div>
+        <div class="thumbs lg">
+            {% for n in range(1, e.samples_captured + 1, (e.samples_captured // 5) or 1) %}{% if loop.index <= 5 %}
+            <img src="{{ url_for('admin_sample', emp_id=e.id, n=n) }}" alt="face sample {{ n }}">{% endif %}{% endfor %}
+        </div>
+        <div>{% include "admin/_employee_row_actions.html" %}</div>
+    </div>
+    {% else %}<p class="muted">Nothing pending.</p>{% endfor %}
+</div>
+
+<div class="card">
+    <h2>Still registering face ({{ enrolling|length }})</h2>
+    <div class="table-wrap"><table>
+        <thead><tr><th>Name</th><th>Department</th><th>Registered</th></tr></thead>
+        <tbody>
+        {% for e in enrolling %}<tr><td>{{ e.full_name }}</td><td><span class="badge gray">{{ e.department_name }}</span></td><td>{{ e.created_at|dt }}</td></tr>
+        {% else %}<tr><td colspan="3" class="muted">None.</td></tr>{% endfor %}
+        </tbody>
+    </table></div>
+</div>
+{% endblock %}

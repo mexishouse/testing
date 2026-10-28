@@ -1,0 +1,42 @@
+{% extends "employee/base.html" %}
+{% block title %}My Department{% endblock %}
+{% block heading %}{{ dept.name }}{% endblock %}
+
+{% block content %}
+<div class="grid grid-main">
+    <div>
+        <div class="card mb-2">
+            <h2>Department details</h2>
+            <div class="kv">
+                <div class="k">Department</div><div><span class="badge">{{ dept.name }}</span></div>
+                <div class="k">About</div><div>{{ dept.description or '—' }}</div>
+                <div class="k">Members</div><div>{{ members|length }}</div>
+                <div class="k">Present today</div><div>{{ members|selectattr('check_in')|list|length }}</div>
+            </div>
+            <p class="scan-note" style="text-align:left">You can only see information of your own department.</p>
+        </div>
+        <div class="card">
+            <h2>Team — today</h2>
+            <div class="table-wrap"><table>
+                <thead><tr><th>Name</th><th>Designation</th><th>Today</th></tr></thead>
+                <tbody>
+                {% for m in members %}
+                    <tr><td>{{ m.full_name }}{% if m.id == me.id %} <span class="badge violet">You</span>{% endif %}</td>
+                        <td>{{ m.designation or '—' }}</td>
+                        <td>{% if not m.check_in %}<span class="badge gray">Not in</span>
+                            {% elif m.check_out %}<span class="badge ok">Left</span>
+                            {% else %}<span class="badge live">In office</span>{% endif %}</td></tr>
+                {% endfor %}
+                </tbody>
+            </table></div>
+        </div>
+    </div>
+    <div class="card">
+        <h2>Department notices</h2>
+        {% for a in announcements %}
+        <div class="notice"><h4>{{ a.title }}</h4><p>{{ a.body }}</p>
+            <small>{{ a.created_at|dt }} · {{ a.department_name or 'Everyone' }}</small></div>
+        {% else %}<p class="muted">No notices.</p>{% endfor %}
+    </div>
+</div>
+{% endblock %}

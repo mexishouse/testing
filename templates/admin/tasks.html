@@ -1,0 +1,13 @@
+{% extends "admin/base.html" %}
+{% block title %}Work Tracker{% endblock %}{% block heading %}Work & Task Tracker{% endblock %}
+{% block content %}
+<div class="card mb-2"><div class="task-top"><div><h2>Assign a task</h2><p class="muted">Assign clear work, set a due date, and track employee updates.</p></div><a class="btn secondary" href="{{ url_for('admin_tasks_xlsx') }}">Export Work Excel</a></div>
+<form method="POST"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="action" value="assign">
+<div class="form-grid"><div class="field"><label>Employee</label><select name="employee_id" required><option value="">Choose employee</option>{% for e in employees %}<option value="{{ e.id }}">{{ e.full_name }} · {{ e.department_name }}</option>{% endfor %}</select></div>
+<div class="field"><label>Task title</label><input name="title" required maxlength="180" placeholder="e.g. Prepare weekly SEO report"></div>
+<div class="field"><label>Due date</label><input type="date" name="due_date"></div>
+<div class="field"><label>Details / expected outcome</label><textarea name="description" rows="2" maxlength="4000" placeholder="Deliverables, links or acceptance criteria"></textarea></div></div><button class="btn" type="submit">Assign task</button></form></div>
+<div class="card"><h2>All employee work ({{ tasks|length }})</h2><p class="muted">This table is also available as a separate Excel work tracker.</p><div class="table-wrap"><table><thead><tr><th>Employee</th><th>Department</th><th>Task / proposal</th><th>Due</th><th>Status</th><th>Employee update</th><th>Action</th></tr></thead><tbody>
+{% for t in tasks %}<tr><td>{{ t.full_name }}<br><small>{{ t.email or '' }}</small></td><td>{{ t.department_name or '—' }}</td><td><strong>{{ t.title }}</strong><br><small>{{ t.description or '' }}</small><br><small>By: {{ t.assigned_by or '—' }}</small></td><td>{{ t.due_date or '—' }}</td><td><span class="badge {{ 'warn' if t.status=='Proposed' else ('success' if t.status=='Completed' else 'gray') }}">{{ t.status }}</span></td><td>{{ t.employee_note or '—' }}<br><small>{{ t.updated_at|dt }}</small></td><td>{% if t.status=='Proposed' %}<form method="POST" class="inline-form"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="action" value="decision"><input type="hidden" name="task_id" value="{{ t.id }}"><button class="btn small" name="decision" value="Assigned">Approve</button><button class="btn danger small" name="decision" value="Rejected">Reject</button></form>{% else %}—{% endif %}</td></tr>
+{% else %}<tr><td colspan="7" class="muted">No tasks or proposals yet.</td></tr>{% endfor %}</tbody></table></div></div>
+{% endblock %}

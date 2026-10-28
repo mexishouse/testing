@@ -1,0 +1,33 @@
+{% extends "admin/base.html" %}
+{% block title %}Departments{% endblock %}
+{% block heading %}Departments{% endblock %}
+
+{% block content %}
+<div class="grid grid-main">
+    <div class="card">
+        <h2>All departments</h2>
+        <div class="table-wrap"><table>
+            <thead><tr><th>Department</th><th>Description</th><th>Employees</th><th>Present today</th><th></th></tr></thead>
+            <tbody>
+            {% for d in depts %}
+            <tr><td><a href="{{ url_for('admin_employees', department_id=d.id) }}">{{ d.name }}</a></td>
+                <td class="muted">{{ d.description }}</td><td>{{ d.approved_count }}{% if d.total_count != d.approved_count %} <span class="muted">({{ d.total_count }} total)</span>{% endif %}</td>
+                <td>{{ d.present_today }}</td>
+                <td class="right">{% if d.total_count == 0 %}
+                    <form class="inline" method="POST" action="{{ url_for('admin_delete_department', dept_id=d.id) }}" onsubmit="return confirm('Delete department?');">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="btn danger small">Delete</button></form>{% endif %}</td></tr>
+            {% endfor %}
+            </tbody>
+        </table></div>
+    </div>
+    <div class="card">
+        <h2>Add department</h2>
+        <form method="POST">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <div class="field"><label>Name</label><input type="text" name="name" required></div>
+            <div class="field"><label>Description</label><input type="text" name="description"></div>
+            <button class="btn" type="submit">Add department</button>
+        </form>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,4 @@
+{% if e.status == 'approved' %}<span class="badge ok">Approved</span>
+{% elif e.status == 'pending' %}<span class="badge violet">Pending approval</span>
+{% elif e.status == 'face_pending' %}<span class="badge gray">Face not registered</span>
+{% else %}<span class="badge bad">Rejected</span>{% endif %}

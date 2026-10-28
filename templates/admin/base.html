@@ -1,0 +1,54 @@
+{% from "_icons.html" import icon, brandmark %}<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="csrf-token" content="{{ csrf_token() }}">
+<title>{% block title %}Admin{% endblock %} - CyberAttend</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+<div class="layout">
+    <div class="sidebar">
+        <div class="brand">{{ brandmark() }}<div>Cyber<span>Attend</span></div></div>
+        <div class="who">{{ 'Main admin' if admin.is_main else ('Temporary admin' if admin.expires_at else 'Admin') }}<b>{{ admin.username }}</b></div>
+        <a class="nav-item {% if active=='dashboard' %}active{% endif %}" href="{{ url_for('admin_dashboard') }}">{{ icon('dashboard') }}Dashboard</a>
+        <a class="nav-item {% if active=='approvals' %}active{% endif %}" href="{{ url_for('admin_approvals') }}">{{ icon('approvals') }}Approvals{% if pending_count %}<span class="count">{{ pending_count }}</span>{% endif %}</a>
+        <a class="nav-item {% if active=='directory' %}active{% endif %}" href="{{ url_for('admin_directory') }}">{{ icon('employees') }}People Directory</a>
+        <a class="nav-item {% if active=='tasks' %}active{% endif %}" href="{{ url_for('admin_tasks') }}">{{ icon('attendance') }}Work & Tasks</a>
+        <a class="nav-item {% if active=='employees' %}active{% endif %}" href="{{ url_for('admin_employees') }}">{{ icon('employees') }}Employees</a>
+        <a class="nav-item {% if active=='leaves' %}active{% endif %}" href="{{ url_for('admin_leaves') }}">{{ icon('attendance') }}Leave Management</a>
+        <a class="nav-item {% if active=='attendance' %}active{% endif %}" href="{{ url_for('admin_attendance') }}">{{ icon('attendance') }}Attendance</a>
+        <a class="nav-item {% if active=='locations' %}active{% endif %}" href="{{ url_for('admin_locations') }}">{{ icon('settings') }}{{ 'Locations & WFH' if admin.is_main else 'WFH Approvals' }}</a>
+        <a class="nav-item {% if active=='messages' %}active{% endif %}" href="{{ url_for('admin_messages') }}">{{ icon('announcements') }}Employee Messages</a>
+        <a class="nav-item {% if active=='departments' %}active{% endif %}" href="{{ url_for('admin_departments') }}">{{ icon('departments') }}Departments</a>
+        <a class="nav-item {% if active=='announcements' %}active{% endif %}" href="{{ url_for('admin_announcements') }}">{{ icon('announcements') }}Announcements</a>
+        <a class="nav-item {% if active=='admins' %}active{% endif %}" href="{{ url_for('admin_admins') }}">{{ icon('admins') }}Admins</a>
+        <a class="nav-item {% if active=='settings' %}active{% endif %}" href="{{ url_for('admin_settings') }}">{{ icon('settings') }}Settings</a>
+        {% if admin.is_main %}<a class="nav-item" href="{{ url_for('admin_dataset_zip') }}">{{ icon('dataset') }}Dataset ZIP</a>{% endif %}
+        <div class="nav-sep"></div>
+        <a class="nav-item" href="{{ url_for('admin_logout') }}">{{ icon('logout') }}Log out</a>
+    </div>
+    <div class="main">
+        <div class="topbar">
+            <h1>{% block heading %}{% endblock %}</h1>
+            <div class="user-tag">{{ 'Main admin' if admin.is_main else 'Admin' }}: {{ admin.username }}</div>
+        </div>
+        {% if admin.is_default_password %}
+        <div class="warnbox red">You are still using the default admin password. <a href="{{ url_for('admin_settings') }}">Change it now →</a></div>
+        {% endif %}
+        {% if admin.expires_at and not admin.is_main %}
+        <div class="warnbox info">Your temporary admin access ends on <b>{{ admin.expires_at|dt }}</b>.</div>
+        {% endif %}
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% for category, msg in messages %}
+                <div class="flash {{ 'error' if category=='error' else '' }}">{{ msg }}</div>
+            {% endfor %}
+        {% endwith %}
+        {% block content %}{% endblock %}
+        <footer class="note">CyberAttend Face Recognition System &mdash; Admin Panel</footer>
+    </div>
+</div>
+{% block scripts %}{% endblock %}
+</body>
+</html>

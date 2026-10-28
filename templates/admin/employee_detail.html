@@ -1,0 +1,61 @@
+{% extends "admin/base.html" %}
+{% block title %}{{ emp.full_name }}{% endblock %}
+{% block heading %}{{ emp.full_name }}{% endblock %}
+
+{% block content %}
+<div class="grid grid-eq mb-2">
+    <div class="card">
+        <h2>Profile</h2>
+        <div class="profile-header">
+            {% if emp.profile_picture %}<img class="profile-avatar large" src="{{ url_for('profile_picture', emp_id=emp.id) }}" alt="Profile picture">
+            {% else %}<div class="profile-avatar large placeholder">{{ emp.full_name[:1]|upper }}</div>{% endif %}
+            <div><strong>{{ emp.full_name }}</strong><p class="muted">{{ emp.designation or 'Team member' }}</p></div>
+        </div>
+        <div class="kv">
+            <div class="k">ID</div><div>#{{ '%03d'|format(emp.id) }}</div>
+            <div class="k">Username</div><div>{{ emp.username }}</div>
+            <div class="k">Department</div><div><span class="badge">{{ emp.department_name }}</span></div>
+            <div class="k">Designation</div><div>{{ emp.designation or '—' }}</div>
+            <div class="k">Email</div><div>{% if emp.email %}<a href="mailto:{{ emp.email }}">{{ emp.email }}</a>{% else %}—{% endif %}</div>
+            <div class="k">Phone</div><div>{% if emp.phone %}<a href="tel:{{ emp.phone }}">{{ emp.phone }}</a>{% else %}—{% endif %}</div>
+            <div class="k">LinkedIn</div><div>{% if emp.social_linkedin %}<a href="{{ emp.social_linkedin }}" target="_blank" rel="noopener noreferrer">Open profile</a>{% else %}—{% endif %}</div>
+            <div class="k">Facebook</div><div>{% if emp.social_facebook %}<a href="{{ emp.social_facebook }}" target="_blank" rel="noopener noreferrer">Open profile</a>{% else %}—{% endif %}</div>
+            <div class="k">Instagram</div><div>{% if emp.social_instagram %}<a href="{{ emp.social_instagram }}" target="_blank" rel="noopener noreferrer">Open profile</a>{% else %}—{% endif %}</div>
+            <div class="k">X / Twitter</div><div>{% if emp.social_x %}<a href="{{ emp.social_x }}" target="_blank" rel="noopener noreferrer">Open profile</a>{% else %}—{% endif %}</div>
+            <div class="k">Portfolio</div><div>{% if emp.social_website %}<a href="{{ emp.social_website }}" target="_blank" rel="noopener noreferrer">Open website</a>{% else %}—{% endif %}</div>
+            <div class="k">Status</div><div>{% set e = emp %}{% include "admin/_status_badge.html" %}</div>
+            <div class="k">Registered</div><div>{{ emp.created_at|dt }}</div>
+            <div class="k">Approved</div><div>{{ emp.approved_at|dt }}</div>
+        </div>
+        {% if emp.flag_note %}<div class="warnbox mt-2">{{ emp.flag_note }}</div>{% endif %}
+        <div class="mt-2">{% set e = emp %}{% include "admin/_employee_row_actions.html" %}</div>
+    </div>
+    <div class="card">
+        <h2>Face dataset ({{ sample_total }} samples)</h2>
+        <div class="thumbs lg">
+            {% for n in sample_ids %}<img src="{{ url_for('admin_sample', emp_id=emp.id, n=n) }}" alt="sample {{ n }}">{% else %}<span class="muted">No samples.</span>{% endfor %}
+        </div>
+        <p class="scan-note" style="text-align:left">Stored in <code>dataset/{{ emp.id }}/</code>{% if admin.is_main %} and inside <a href="{{ url_for('admin_dataset_zip') }}">dataset.zip</a>{% else %}. Dataset ZIP downloads are restricted to the main admin.{% endif %}</p>
+    </div>
+</div>
+
+<div class="card mb-2">
+    <form method="GET" class="filters" style="margin-bottom:0">
+        <div class="field"><label>Month</label><input type="month" name="month" value="{{ month }}"></div>
+        <button class="btn small" type="submit">Show</button>
+        <span class="muted">Present {{ summary.days_present }} · Worked {{ summary.total_seconds|hm }} · Late {{ summary.late_days }} · Short {{ summary.short_days }} · Missed check-out {{ summary.missed_checkouts }}</span>
+    </form>
+</div>
+<div class="card">
+    <h2>Attendance — {{ month }}</h2>
+    <div class="table-wrap"><table>
+        <thead><tr><th>Date</th><th>In</th><th>Out</th><th>Worked</th><th>Status</th></tr></thead>
+        <tbody>
+        {% for r in rows %}<tr><td>{{ r.work_date }}</td><td>{{ r.check_in_time }}{% if r.is_late %} <span class="badge warn">Late</span>{% endif %}</td>
+            <td>{{ r.check_out_time }}</td><td>{{ r.worked|hm if r.status != 'No Check-out' else '—' }}</td>
+            <td><span class="badge {{ r.status_class }}">{{ r.status }}</span></td></tr>
+        {% else %}<tr><td colspan="5" class="muted">No records.</td></tr>{% endfor %}
+        </tbody>
+    </table></div>
+</div>
+{% endblock %}

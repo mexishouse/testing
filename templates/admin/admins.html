@@ -1,0 +1,63 @@
+{% extends "admin/base.html" %}
+{% block title %}Admins{% endblock %}
+{% block heading %}Administrators{% endblock %}
+
+{% block content %}
+<div class="grid grid-main">
+    <div class="card">
+        <h2>All admins ({{ admins|length }})</h2>
+        <div class="table-wrap"><table>
+            <thead><tr><th>Username</th><th>Type</th><th>Access until</th><th>Added by</th>{% if is_main %}<th></th>{% endif %}</tr></thead>
+            <tbody>
+            {% for a in admins %}
+            <tr>
+                <td><b>{{ a.username }}</b>{% if a.id == admin.id %} <span class="badge gray">You</span>{% endif %}</td>
+                <td>{% if a.is_main %}<span class="badge dark">Main admin</span>
+                    {% elif a.expires_at %}<span class="badge violet">Temporary</span>
+                    {% else %}<span class="badge">Permanent</span>{% endif %}</td>
+                <td>{% if a.is_main or not a.expires_at %}<span class="muted">No expiry</span>
+                    {% elif a.expired %}<span class="badge bad">Expired {{ a.expires_at|dt }}</span>
+                    {% else %}{{ a.expires_at|dt }}{% endif %}</td>
+                <td class="muted">{{ a.created_by or '—' }}</td>
+                {% if is_main %}
+                <td class="right">{% if not a.is_main %}
+                    <form class="inline" method="POST" action="{{ url_for('admin_delete_admin', admin_id=a.id) }}"
+                          onsubmit="return confirm('Remove admin {{ a.username }}? They will lose access immediately.');">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button class="btn danger small" type="submit">Remove</button></form>
+                    {% endif %}</td>
+                {% endif %}
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table></div>
+        <p class="scan-note" style="text-align:left">
+            Only the main admin can add or remove admins, and only the main admin can revoke or delete employees.
+            Temporary admins lose access automatically when their time is over.
+        </p>
+    </div>
+
+    {% if is_main %}
+    <div class="card">
+        <h2>Add admin</h2>
+        <form method="POST" action="{{ url_for('admin_add_admin') }}" autocomplete="off">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <div class="field"><label>Username</label><input type="text" name="username" required minlength="3"></div>
+            <div class="field"><label>Password (min 8)</label><input type="password" name="password" required minlength="8"></div>
+            <div class="field"><label>Confirm password</label><input type="password" name="confirm" required minlength="8"></div>
+            <div class="field"><label>Access</label>
+                <select name="duration">
+                    {% for key, (label, days) in durations.items() %}<option value="{{ key }}">{{ label }}</option>{% endfor %}
+                </select>
+                <div class="hint">Temporary admins are locked out automatically when the time ends. They are asked to change the password you set.</div></div>
+            <button class="btn" type="submit">Add admin</button>
+        </form>
+    </div>
+    {% else %}
+    <div class="card">
+        <h2>Your access</h2>
+        <p class="muted">You can manage approvals, attendance, departments and announcements. Adding or removing admins and removing employees is reserved for the main admin.</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

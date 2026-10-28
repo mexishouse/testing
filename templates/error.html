@@ -1,0 +1,10 @@
+{% extends "public_base.html" %}
+{% block title %}Error {{ code }}{% endblock %}
+{% block brand %}{% endblock %}
+{% block content %}
+<div class="errpage" style="padding-top:0">
+    <div class="code">{{ code }}</div>
+    <p class="muted">{% if code == 403 %}You are not allowed to open this page.{% elif code == 404 %}Page not found.{% else %}{{ message or 'Something went wrong.' }}{% endif %}</p>
+    <a class="btn auto mt-2" href="{{ url_for('index') }}">← Home</a>
+</div>
+{% endblock %}

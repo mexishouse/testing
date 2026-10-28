@@ -1,0 +1,43 @@
+{% from "_icons.html" import icon, brandmark %}<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="csrf-token" content="{{ csrf_token() }}">
+<title>{% block title %}Employee Panel{% endblock %} - CyberAttend</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body class="emp">
+<div class="layout">
+    <div class="sidebar">
+        <div class="brand">{{ brandmark() }}<div>Cyber<span>Attend</span></div></div>
+        <div class="who">{% if me.profile_picture %}<img class="nav-avatar" src="{{ url_for('profile_picture', emp_id=me.id) }}" alt="">{% endif %}Employee<b>{{ me.full_name }}</b>{{ me.department_name }}</div>
+        <a class="nav-item {% if active=='dashboard' %}active{% endif %}" href="{{ url_for('dashboard') }}">{{ icon('dashboard') }}Dashboard</a>
+        <a class="nav-item {% if active=='attendance' %}active{% endif %}" href="{{ url_for('my_attendance') }}">{{ icon('attendance') }}My attendance</a>
+        <a class="nav-item {% if active=='leaves' %}active{% endif %}" href="{{ url_for('employee_leaves') }}">{{ icon('attendance') }}My Leaves</a>
+        <a class="nav-item {% if active=='wfh' %}active{% endif %}" href="{{ url_for('wfh_request') }}">{{ icon('attendance') }}Work from Home</a>
+        <a class="nav-item {% if active=='directory' %}active{% endif %}" href="{{ url_for('employee_directory') }}">{{ icon('employees') }}Team Directory</a>
+        <a class="nav-item {% if active=='tasks' %}active{% endif %}" href="{{ url_for('employee_tasks') }}">{{ icon('attendance') }}My Work & Tasks</a>
+        <a class="nav-item {% if active=='messages' %}active{% endif %}" href="{{ url_for('employee_messages') }}">{{ icon('announcements') }}Messages</a>
+        <a class="nav-item {% if active=='department' %}active{% endif %}" href="{{ url_for('my_department') }}">{{ icon('departments') }}My department</a>
+        <a class="nav-item {% if active=='profile' %}active{% endif %}" href="{{ url_for('profile') }}">{{ icon('profile') }}Profile</a>
+        <div class="nav-sep"></div>
+        <a class="nav-item" href="{{ url_for('logout') }}">{{ icon('logout') }}Log out</a>
+    </div>
+    <div class="main">
+        <div class="topbar">
+            <h1>{% block heading %}{% endblock %}</h1>
+            <div class="user-tag">{{ me.full_name }} · {{ me.department_name }}</div>
+        </div>
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% for category, msg in messages %}
+                <div class="flash {{ 'error' if category=='error' else '' }}">{{ msg }}</div>
+            {% endfor %}
+        {% endwith %}
+        {% block content %}{% endblock %}
+        <footer class="note">CyberAttend Face Recognition System &mdash; Employee Panel</footer>
+    </div>
+</div>
+{% block scripts %}{% endblock %}
+</body>
+</html>

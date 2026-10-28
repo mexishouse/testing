@@ -1,0 +1,30 @@
+{% extends "admin/base.html" %}
+{% block title %}Announcements{% endblock %}
+{% block heading %}Announcements{% endblock %}
+
+{% block content %}
+<div class="grid grid-main">
+    <div class="card">
+        <h2>Posted notices</h2>
+        {% for a in items %}
+        <div class="notice"><div class="row"><h4>{{ a.title }}</h4><span class="spacer"></span>
+            <form class="inline" method="POST" action="{{ url_for('admin_delete_announcement', ann_id=a.id) }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="btn danger small">Delete</button></form></div>
+            <p>{{ a.body }}</p><small>{{ a.created_at|dt }} · for {{ a.department_name or 'Everyone' }}</small></div>
+        {% else %}<p class="muted">No announcements yet.</p>{% endfor %}
+    </div>
+    <div class="card">
+        <h2>New notice</h2>
+        <form method="POST">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <div class="field"><label>Visible to</label>
+                <select name="department_id"><option value="">Everyone</option>
+                {% for d in departments %}<option value="{{ d.id }}">{{ d.name }} only</option>{% endfor %}</select>
+                <div class="hint">Department notices are visible only to employees of that department.</div></div>
+            <div class="field"><label>Title</label><input type="text" name="title" required maxlength="120"></div>
+            <div class="field"><label>Message</label><textarea name="body" required maxlength="2000"></textarea></div>
+            <button class="btn" type="submit">Post notice</button>
+        </form>
+    </div>
+</div>
+{% endblock %}

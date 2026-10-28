@@ -1,0 +1,50 @@
+{% extends 'admin/base.html' %}
+{% block title %}Locations & WFH{% endblock %}
+{% block heading %}Office locations & WFH approvals{% endblock %}
+{% block content %}
+{% if admin.is_main %}
+<section class="card location-panel">
+  <div class="section-intro"><span class="section-icon">⌖</span><div><h2>Office locations</h2><p class="muted">Manage approved workplaces and their attendance geofence.</p></div></div>
+  <form method="post" class="location-form location-form-add" novalidate>
+    <input type="hidden" name="form_action" value="add_location">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <div class="field"><label>Location name</label><input name="name" placeholder="e.g. Johar Town" required></div>
+    <div class="field"><label>Latitude</label><input name="latitude" type="number" step="any" placeholder="31.XXXXXX" required></div>
+    <div class="field"><label>Longitude</label><input name="longitude" type="number" step="any" placeholder="74.XXXXXX" required></div>
+    <div class="field"><label>Radius (meters)</label><input name="radius_m" type="number" min="25" max="2000" value="150" required></div>
+    <button class="btn" type="submit">Add location</button>
+  </form>
+  <div class="table-wrap location-table"><table><thead><tr><th>Location</th><th>Coordinates & radius</th><th>Status</th><th>Action</th></tr></thead><tbody>
+  {% for l in locations %}<tr><td><strong>{{ l.name }}</strong></td><td><span class="coordinate-text">{{ l.latitude if l.latitude is not none else 'Not configured' }}, {{ l.longitude if l.longitude is not none else '—' }}</span><small class="table-subtext">Radius: {{ l.radius_m or 150 }} meters</small></td><td><span class="status-pill {{ 'status-active' if l.active else 'status-inactive' }}">{{ 'Active' if l.active else 'Disabled' }}</span></td><td><form method="post" action="{{ url_for('admin_location_toggle',loc_id=l.id) }}" onsubmit="return confirm('Change this office location status?')"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="btn secondary small" type="submit">{{ 'Disable' if l.active else 'Enable' }}</button></form></td></tr>
+  {% else %}<tr><td colspan="4" class="muted">No office locations have been added yet.</td></tr>{% endfor %}
+  </tbody></table></div>
+</section>
+<section class="card location-panel">
+  <div class="section-intro"><span class="section-icon">◎</span><div><h2>Update location coordinates</h2><p class="muted">Enter the exact office coordinates. Attendance is accepted only within the configured radius. Locations marked “Not configured” cannot be used for office check-in until saved here.</p></div></div>
+  <form method="post" class="location-form location-form-update">
+    <input type="hidden" name="form_action" value="update_coordinates">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <div class="field"><label>Office</label><select name="location_id" required>{% for l in locations %}<option value="{{ l.id }}">{{ l.name }}</option>{% endfor %}</select></div>
+    <div class="field"><label>Latitude</label><input name="latitude" type="number" step="any" placeholder="31.XXXXXX" required></div>
+    <div class="field"><label>Longitude</label><input name="longitude" type="number" step="any" placeholder="74.XXXXXX" required></div>
+    <div class="field"><label>Radius (meters)</label><input name="radius_m" type="number" min="25" max="2000" value="150" required></div>
+    <button class="btn" type="submit">Save coordinates</button>
+  </form>
+</section>
+<section class="card location-panel">
+  <div class="section-intro"><span class="section-icon">♙</span><div><h2>Assign employee office</h2><p class="muted">Choose the default workplace each employee must use for in-office attendance.</p></div></div>
+  <form method="post" class="location-form location-form-assign">
+    <input type="hidden" name="form_action" value="assign_employee">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <div class="field"><label>Employee</label><select name="employee_id" required>{% for e in employees %}<option value="{{ e.id }}">{{ e.full_name }}</option>{% endfor %}</select></div>
+    <div class="field"><label>Assigned location</label><select name="assigned_location"><option value="">Any active office</option>{% for l in locations if l.active %}<option>{{ l.name }}</option>{% endfor %}</select></div>
+    <button class="btn" type="submit">Save assignment</button>
+  </form>
+</section>
+{% endif %}
+<section class="card location-panel"><div class="section-intro"><span class="section-icon">⌂</span><div><h2>Pending work-from-home requests</h2><p class="muted">Review employee requests and approve or decline them.</p></div></div>
+<div class="table-wrap"><table><thead><tr><th>Employee</th><th>Date</th><th>Reason</th><th>Decision</th></tr></thead><tbody>
+{% for r in requests %}<tr><td><strong>{{ r.full_name }}</strong></td><td>{{ r.work_date }}</td><td>{{ r.reason }}</td><td><div class="actions"><form method="post" action="{{ url_for('admin_wfh_decide',req_id=r.id,decision='approve') }}" onsubmit="return confirm('Approve this work-from-home request?')"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="btn small" type="submit">Approve</button></form><form method="post" action="{{ url_for('admin_wfh_decide',req_id=r.id,decision='reject') }}" onsubmit="return confirm('Decline this work-from-home request?')"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="btn secondary small" type="submit">Decline</button></form></div></td></tr>
+{% else %}<tr><td colspan="4" class="muted">There are no pending work-from-home requests.</td></tr>{% endfor %}
+</tbody></table></div></section>
+{% endblock %}

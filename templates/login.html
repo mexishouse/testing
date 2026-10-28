@@ -1,0 +1,17 @@
+{% extends "public_base.html" %}
+{% block title %}Employee Sign in - CyberAttend{% endblock %}
+{% block boxclass %}emp{% endblock %}
+{% block content %}
+<h1>Employee sign in</h1>
+<p class="sub">Password and face recognition required</p>
+<form method="POST" autocomplete="off">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <div class="field"><label>Username</label><input type="text" name="username" required autofocus></div>
+    <div class="field"><label>Password</label><input type="password" name="password" required></div>
+    <button class="btn" type="submit">Continue to face scan</button>
+</form>
+<div class="links">
+    New employee? <a href="{{ url_for('register') }}">Create an account</a><br>
+    <a href="{{ url_for('admin_login') }}" class="muted">Admin panel →</a>
+</div>
+{% endblock %}
